@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { subscribeToEntries, saveEntries } from '../services/firestore'
 import Toast from '../components/Toast'
@@ -14,15 +14,13 @@ function TimeTracker({ goals }) {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const saveTimeoutRef = useRef(null)
-  const isInitialLoad = useRef(true)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Subscribe to entries for selected date from Firestore
   useEffect(() => {
     if (!user) return
 
     setIsLoading(true)
-    isInitialLoad.current = true
 
     const unsubscribe = subscribeToEntries(user.uid, selectedDate, (data) => {
       if (data) {
@@ -33,81 +31,81 @@ function TimeTracker({ goals }) {
         setHours('')
       }
       setIsLoading(false)
-      // Allow saves after initial load completes
-      setTimeout(() => {
-        isInitialLoad.current = false
-      }, 100)
     })
 
     return () => unsubscribe()
   }, [user, selectedDate])
 
-  // Save entries with debounce
-  useEffect(() => {
-    if (!user || isInitialLoad.current || segments.length === 0) return
+  const handleSaveEntries = async () => {
+    if (!user || segments.length === 0) return
 
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
+    setIsSaving(true)
+    try {
+      await saveEntries(user.uid, selectedDate, {
+        hours,
+        segments,
+        date: selectedDate
+      })
+      setToastMessage('Entries saved')
+      setShowToast(true)
+    } catch (error) {
+      console.error('Failed to save entries:', error)
+      setToastMessage('Failed to save')
+      setShowToast(true)
+    } finally {
+      setIsSaving(false)
     }
-
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        await saveEntries(user.uid, selectedDate, {
-          hours,
-          segments,
-          date: selectedDate
-        })
-        setToastMessage('Entries saved')
-        setShowToast(true)
-      } catch (error) {
-        console.error('Failed to save entries:', error)
-        setToastMessage('Failed to save')
-        setShowToast(true)
-      }
-    }, 1000)
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [segments, hours, selectedDate, user])
+  }
 
   const hideToast = useCallback(() => {
     setShowToast(false)
   }, [])
+
+  const hasExistingData = () => {
+    return segments.some(seg => seg.activity || seg.goalId)
+  }
+
+  const createSegments = (hoursPerSegment) => {
+    const minutesPerSegment = hoursPerSegment * 60
+    const totalDayMinutes = 24 * 60
+    const newSegments = []
+    let currentMinute = 0
+    let segmentId = 1
+
+    while (currentMinute < totalDayMinutes) {
+      const remainingMinutes = totalDayMinutes - currentMinute
+      const segmentDuration = Math.min(minutesPerSegment, remainingMinutes)
+      const endMinute = currentMinute + segmentDuration
+
+      newSegments.push({
+        id: segmentId,
+        start: formatTime(currentMinute),
+        end: formatTime(endMinute, true),
+        duration: formatDuration(segmentDuration),
+        isPartial: segmentDuration < minutesPerSegment,
+        activity: '',
+        goalId: ''
+      })
+
+      currentMinute = endMinute
+      segmentId++
+    }
+
+    setSegments(newSegments)
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const hoursPerSegment = parseInt(hours, 10)
 
     if (hoursPerSegment > 0 && hoursPerSegment <= 24) {
-      const minutesPerSegment = hoursPerSegment * 60
-      const totalDayMinutes = 24 * 60
-      const newSegments = []
-      let currentMinute = 0
-      let segmentId = 1
-
-      while (currentMinute < totalDayMinutes) {
-        const remainingMinutes = totalDayMinutes - currentMinute
-        const segmentDuration = Math.min(minutesPerSegment, remainingMinutes)
-        const endMinute = currentMinute + segmentDuration
-
-        newSegments.push({
-          id: segmentId,
-          start: formatTime(currentMinute),
-          end: formatTime(endMinute, true),
-          duration: formatDuration(segmentDuration),
-          isPartial: segmentDuration < minutesPerSegment,
-          activity: '',
-          goalId: ''
-        })
-
-        currentMinute = endMinute
-        segmentId++
+      if (hasExistingData()) {
+        const confirmed = window.confirm(
+          'You have existing entries for this day. Recreating segments will clear all your data. Are you sure you want to continue?'
+        )
+        if (!confirmed) return
       }
-
-      setSegments(newSegments)
+      createSegments(hoursPerSegment)
     }
   }
 
@@ -228,6 +226,15 @@ function TimeTracker({ goals }) {
               ))}
             </tbody>
           </table>
+          <div className="save-section">
+            <button
+              onClick={handleSaveEntries}
+              className="save-btn"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Entries'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="empty-state">

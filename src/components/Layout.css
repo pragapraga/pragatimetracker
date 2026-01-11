@@ -329,6 +329,9 @@
   .sidebar {
     transform: translateX(-100%);
     width: 280px;
+    overflow-y: auto;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 
   .mobile-menu-open .sidebar {
@@ -383,5 +386,28 @@
 
   .sidebar-collapsed.mobile-menu-open .sidebar {
     transform: translateX(0);
+  }
+
+  /* Ensure user section is visible on mobile */
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .sidebar-user {
+    padding: 1rem;
+    padding-bottom: 1.5rem;
+    flex-shrink: 0;
+    background: #1a1a2e;
+  }
+
+  .sidebar-user .user-details,
+  .sidebar-user .logout-btn .nav-text {
+    display: block;
+  }
+
+  .sidebar-user .logout-btn {
+    justify-content: flex-start;
   }
 }

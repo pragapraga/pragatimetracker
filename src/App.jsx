@@ -30,11 +30,15 @@ function AppContent() {
     return () => unsubscribe()
   }, [user])
 
-  // Save goals to Firestore when they change
-  const updateGoals = async (newGoals) => {
+  // Update goals locally (without saving)
+  const updateGoals = (newGoals) => {
     setGoals(newGoals)
+  }
+
+  // Save goals to Firestore
+  const persistGoals = async (goalsToSave) => {
     if (user) {
-      await saveGoals(user.uid, newGoals)
+      await saveGoals(user.uid, goalsToSave)
     }
   }
 
@@ -51,7 +55,7 @@ function AppContent() {
           }
         >
           <Route index element={<TimeTracker goals={goals} />} />
-          <Route path="goals" element={<Goals goals={goals} setGoals={updateGoals} />} />
+          <Route path="goals" element={<Goals goals={goals} setGoals={updateGoals} saveGoals={persistGoals} />} />
         </Route>
       </Routes>
     </BrowserRouter>

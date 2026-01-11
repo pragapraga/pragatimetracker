@@ -2,15 +2,11 @@ import { useState, useCallback } from 'react'
 import Toast from '../components/Toast'
 import './Goals.css'
 
-function Goals({ goals, setGoals }) {
+function Goals({ goals, setGoals, saveGoals }) {
   const [newGoal, setNewGoal] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
-
-  const showToastMessage = (message) => {
-    setToastMessage(message)
-    setShowToast(true)
-  }
+  const [isSaving, setIsSaving] = useState(false)
 
   const hideToast = useCallback(() => {
     setShowToast(false)
@@ -21,13 +17,26 @@ function Goals({ goals, setGoals }) {
     if (newGoal.trim()) {
       setGoals([...goals, { id: Date.now(), name: newGoal.trim() }])
       setNewGoal('')
-      showToastMessage('Goal added')
     }
   }
 
   const deleteGoal = (goalId) => {
     setGoals(goals.filter(g => g.id !== goalId))
-    showToastMessage('Goal deleted')
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      await saveGoals(goals)
+      setToastMessage('Goals saved')
+      setShowToast(true)
+    } catch (error) {
+      console.error('Failed to save goals:', error)
+      setToastMessage('Failed to save')
+      setShowToast(true)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -50,14 +59,25 @@ function Goals({ goals, setGoals }) {
           <p>No goals yet. Add your first goal above!</p>
         </div>
       ) : (
-        <div className="goals-grid">
-          {goals.map(goal => (
-            <div key={goal.id} className="goal-card">
-              <span className="goal-name">{goal.name}</span>
-              <button onClick={() => deleteGoal(goal.id)} className="delete-btn">Delete</button>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="goals-grid">
+            {goals.map(goal => (
+              <div key={goal.id} className="goal-card">
+                <span className="goal-name">{goal.name}</span>
+                <button onClick={() => deleteGoal(goal.id)} className="delete-btn">Delete</button>
+              </div>
+            ))}
+          </div>
+          <div className="save-section">
+            <button
+              onClick={handleSave}
+              className="save-btn"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Goals'}
+            </button>
+          </div>
+        </>
       )}
 
       <Toast message={toastMessage} show={showToast} onClose={hideToast} />

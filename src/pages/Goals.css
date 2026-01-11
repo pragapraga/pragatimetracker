@@ -93,6 +93,33 @@
   color: white;
 }
 
+.save-section {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.save-btn:hover {
+  background: #059669;
+}
+
+.save-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
   .goals-page h1 {
@@ -126,5 +153,13 @@
 
   .empty-state {
     padding: 2rem 1rem;
+  }
+
+  .save-section {
+    justify-content: center;
+  }
+
+  .save-btn {
+    width: 100%;
   }
 }
