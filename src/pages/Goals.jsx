@@ -1,16 +1,31 @@
-import { useState, useCallback } from 'react'
-import Toast from '../components/Toast'
-import './Goals.css'
+import { useState } from 'react'
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  IconButton,
+  Grid,
+  Stack,
+  Snackbar,
+  Alert,
+} from '@mui/material'
+import {
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Add as AddIcon,
+} from '@mui/icons-material'
 
 function Goals({ goals, setGoals, saveGoals }) {
   const [newGoal, setNewGoal] = useState('')
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [isSaving, setIsSaving] = useState(false)
 
-  const hideToast = useCallback(() => {
-    setShowToast(false)
-  }, [])
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity })
+  }
 
   const addGoal = (e) => {
     e.preventDefault()
@@ -28,60 +43,116 @@ function Goals({ goals, setGoals, saveGoals }) {
     setIsSaving(true)
     try {
       await saveGoals(goals)
-      setToastMessage('Goals saved')
-      setShowToast(true)
+      showSnackbar('Goals saved successfully')
     } catch (error) {
       console.error('Failed to save goals:', error)
-      setToastMessage('Failed to save')
-      setShowToast(true)
+      showSnackbar('Failed to save goals', 'error')
     } finally {
       setIsSaving(false)
     }
   }
 
   return (
-    <div className="goals-page">
-      <h1>Goals</h1>
-      <p className="page-description">Create and manage your goals. These will appear in the time slot dropdown.</p>
+    <Box>
+      <Typography variant="h4" gutterBottom fontWeight={600}>
+        Goals
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Create and manage your goals. These will appear in the time slot dropdown.
+      </Typography>
 
-      <form onSubmit={addGoal} className="goal-form">
-        <input
-          type="text"
-          value={newGoal}
-          onChange={(e) => setNewGoal(e.target.value)}
-          placeholder="Enter a new goal..."
-        />
-        <button type="submit">Add Goal</button>
-      </form>
+      {/* Add Goal Form */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <form onSubmit={addGoal}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                fullWidth
+                value={newGoal}
+                onChange={(e) => setNewGoal(e.target.value)}
+                placeholder="Enter a new goal..."
+                size="small"
+                sx={{ flex: 1 }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                startIcon={<AddIcon />}
+              >
+                Add Goal
+              </Button>
+            </Stack>
+          </form>
+        </CardContent>
+      </Card>
 
       {goals.length === 0 ? (
-        <div className="empty-state">
-          <p>No goals yet. Add your first goal above!</p>
-        </div>
+        <Card>
+          <CardContent sx={{ textAlign: 'center', py: 4 }}>
+            <Typography color="text.secondary">
+              No goals yet. Add your first goal above!
+            </Typography>
+          </CardContent>
+        </Card>
       ) : (
         <>
-          <div className="goals-grid">
+          <Grid container spacing={2} sx={{ mb: 3 }}>
             {goals.map(goal => (
-              <div key={goal.id} className="goal-card">
-                <span className="goal-name">{goal.name}</span>
-                <button onClick={() => deleteGoal(goal.id)} className="delete-btn">Delete</button>
-              </div>
+              <Grid item xs={12} sm={6} md={4} key={goal.id}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    px: 2,
+                    py: 1.5,
+                  }}
+                >
+                  <Typography fontWeight={500}>
+                    {goal.name}
+                  </Typography>
+                  <IconButton
+                    onClick={() => deleteGoal(goal.id)}
+                    color="error"
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Card>
+              </Grid>
             ))}
-          </div>
-          <div className="save-section">
-            <button
+          </Grid>
+          <Stack direction="row" justifyContent="flex-end">
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<SaveIcon />}
               onClick={handleSave}
-              className="save-btn"
               disabled={isSaving}
             >
               {isSaving ? 'Saving...' : 'Save Goals'}
-            </button>
-          </div>
+            </Button>
+          </Stack>
         </>
       )}
 
-      <Toast message={toastMessage} show={showToast} onClose={hideToast} />
-    </div>
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   )
 }
 

@@ -7,7 +7,39 @@ A React-based time tracking web application that helps users split their day int
 
 ## Version History
 
-### v1.0.0 - Initial Release (Current)
+### v1.2.0 - Material Design (Current)
+
+#### UI/UX Overhaul
+- **Material UI Integration**: Complete rewrite using MUI component library
+  - MUI AppBar and Drawer for navigation
+  - MUI Cards, Tables, Buttons, TextFields, Dialogs
+  - MUI Snackbar for notifications (replaced custom Toast)
+  - MUI Icons throughout the app
+- **Improved Dark Mode**: MUI ThemeProvider with proper dark/light theme switching
+- **Better Responsiveness**: MUI breakpoints for consistent mobile experience
+- **Cleaner Codebase**: Removed custom CSS files in favor of MUI sx prop
+
+---
+
+### v1.1.0 - Dark Mode & Templates
+
+#### New Features
+
+**Dark Mode**
+- Toggle between light and dark themes
+- Theme preference saved to localStorage
+- Smooth transition between themes
+
+**Time Slot Templates**
+- Save current day's configuration as a reusable template
+- Templates page to view and manage saved templates
+- Apply templates to any day with one click
+- Template preview showing time slots and activities
+- Confirmation dialog before applying (prevents data loss)
+
+---
+
+### v1.0.0 - Initial Release
 
 #### Core Features
 
@@ -59,11 +91,11 @@ A React-based time tracking web application that helps users split their day int
 ## Technical Stack
 
 - **Frontend**: React 18 + Vite 5
+- **UI Library**: Material UI (MUI) v5
 - **Routing**: React Router v6
 - **Authentication**: Firebase Auth (Google Provider)
 - **Database**: Firebase Firestore
 - **Hosting**: Firebase Hosting
-- **Styling**: CSS with responsive media queries
 
 ---
 
@@ -73,22 +105,19 @@ A React-based time tracking web application that helps users split their day int
 timetracker/
 ├── src/
 │   ├── components/
-│   │   ├── Layout.jsx        # Main layout with sidebar
-│   │   ├── ProtectedRoute.jsx # Auth guard
-│   │   └── Toast.jsx         # Toast notifications
+│   │   ├── Layout.jsx        # MUI AppBar + Drawer layout
+│   │   └── ProtectedRoute.jsx # Auth guard
 │   ├── context/
-│   │   └── AuthContext.jsx   # Auth state management
+│   │   ├── AuthContext.jsx   # Auth state management
+│   │   └── ThemeContext.jsx  # MUI theme + dark mode
 │   ├── pages/
-│   │   ├── Goals.jsx         # Goals management page
-│   │   ├── Goals.css
-│   │   ├── Login.jsx         # Login page
-│   │   ├── Login.css
-│   │   ├── TimeTracker.jsx   # Main time tracking page
-│   │   └── TimeTracker.css
+│   │   ├── Goals.jsx         # Goals management (MUI)
+│   │   ├── Login.jsx         # Login page (MUI)
+│   │   ├── Templates.jsx     # Templates management (MUI)
+│   │   └── TimeTracker.jsx   # Main time tracking (MUI)
 │   ├── services/
 │   │   └── firestore.js      # Firestore CRUD operations
 │   ├── App.jsx               # Root component
-│   ├── App.css
 │   ├── firebase.js           # Firebase configuration
 │   └── main.jsx              # Entry point
 ├── firebase.json             # Firebase config
@@ -119,6 +148,10 @@ timetracker/
    - Issue: Auto-save with debounce felt unreliable
    - Fix: Changed to manual save with explicit "Save" button
 
+5. **Mobile Sidebar Logout**
+   - Issue: Logout button not visible in portrait mode
+   - Fix: Added overflow-y: auto and dynamic viewport height
+
 ---
 
 ## Future Ideas (Backlog)
@@ -126,8 +159,8 @@ timetracker/
 - [ ] Weekly/monthly summary views
 - [ ] Goal progress tracking/analytics
 - [ ] Export data to CSV
-- [ ] Dark mode
-- [ ] Recurring time slot templates
+- [x] Dark mode
+- [x] Recurring time slot templates
 - [ ] Time spent per goal statistics
 - [ ] Offline support with sync
 
